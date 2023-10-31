@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/HandsomePeasant/tinyapp/issues"
   },
-  "homepage": "https://github.com/HandsomePeasant/tinyapp#readme"
+  "homepage": "https://github.com/HandsomePeasant/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
