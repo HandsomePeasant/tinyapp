@@ -1,3 +1,10 @@
+<style>
+  .btn {
+    background-color: none;
+    color: black;
+    border: thin solid black;
+  }
+</style>
 <header>
   <nav class="navbar navbar-expand-md navbar-dark bg-success">
     <a class="navbar-brand" href="/urls">TinyApp</a>
@@ -18,5 +25,17 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
+    <div><% if(username) { %>
+      Logged in as <%= username %>
+      <form method="POST" action="/logout">
+        <button type="submit" class="btn">Log out</button>
+      </form>
+      <% } else { %>
+    <form method="POST" action="/login">
+      <input type="text" name="username" placeholder="Username">
+      <button type="submit" class="btn">Log in</button>
+    </form>
+    </div>
+    <% } %>
   </nav>
 </header>
