@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <style>
+      .button {
+  background-color: none;
+  border: solid blueviolet;
+  color: blueviolet;
+  padding: 10px 28px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 2px 2px;
+  cursor: pointer;
+}
+.button2 {
+  border: solid red;
+  color: red;
+  padding: 10px 26px;
+}
+    </style>
     <meta charset="utf-8" />
     <meta
       name="viewport"
@@ -36,12 +55,12 @@
               <td><%= urls[id] %></td>
               <td>
                 <form method="GET" action="urls/<%= id %>" >
-                  <input type ="submit" value="Edit">
+                  <input type ="submit" value="Edit" class="button">
                 </form>
               </td>
               <td>
                 <form method="POST" action="urls/<%= id %>/delete" >
-                  <input type ="submit" value="Delete">
+                  <input type ="submit" value="Delete" class="button button2">
                 </form>
               </td>
             </tr>
