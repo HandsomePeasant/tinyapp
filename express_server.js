@@ -1,10 +1,12 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const nodemon = require("nodemon");
+// const nodemon = require("nodemon");
+const morgan = require("morgan");
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+app.use(morgan('tiny'));
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
