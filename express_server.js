@@ -147,15 +147,18 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
+  // if user did not fill out one or both fields, returns a 400 error
   if (!email || !password) {
     return res.status(400).send("Please provide an email AND password");
   }
 
+  // If the entered email is not in the database, returns a 403 error
   const user = checkEmail(users, email);
   if (!user) {
     return res.status(403).send("Email not found");
   };
 
+  // If the email is found but password is incorrect, returns a 403 error (with a nonspecific error message to avoid revealing whether an email exists in the database)
   if (!checkPassword(user, password)) {
     return res.status(403).send("Invalid credentials");
   }
@@ -163,15 +166,17 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
-// POST /register
+// POST /register -- performs similar checks to POST /login (but in this case checks if checkEmail() returns a value), generates a new user_id, creates a cookie and redirects to /urls
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
+  // if user did not fill out one or both fields, returns a 400 error
   if (!email || !password) {
     return res.status(400).send("Please provide an email AND password");
   }
 
+  // If the entered email is already in the database, returns a 403 error
   if (checkEmail(users, email)) {
     return res.status(400).send("This email has already been registered!");
   }
@@ -179,11 +184,10 @@ app.post("/register", (req, res) => {
   const newID = generateRandomString();
   users[newID] = storeUserData(newID, req.body.email, req.body.password);
   res.cookie("user_id", newID);
-  console.log(users); // Making sure new user has properly been added to the database
   res.redirect("/urls");
 });
 
-// POST /logout -- user clicks the logout button, the cookie is cleared
+// POST /logout -- user clicks the logout button, the cookie is cleared and they are redirected to /login
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/login");
