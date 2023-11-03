@@ -5,7 +5,7 @@
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
     integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous" />
-  <title>Register</title>
+  <title>Log in</title>
 </head>
 
 <body>
@@ -20,19 +20,19 @@
   </header>
   <main style="margin: 1em;">
     <div>
-      <h3>Welcome! Let's get started</h3>
+      <h3>Log in</h3>
 
-      <h4>Already have an account? <a href="/login">Log in here</a></h4>
+      <h4>Don't have an account yet? <a href="/register">Register here</a></h4>
     </div>
     <div class="card-footer text-muted">
-      <form method="POST" action="/register">
+      <form method="POST" action="/login">
         <label>Email</label>
         <input name="email" type="email">
         <br />
         <label>Password</label>
         <input name="password" type="password">
         <br />
-        <button type="submit">Register</button>
+        <button type="submit">Log in</button>
       </form>
     </div>
   </main>
