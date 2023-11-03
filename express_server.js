@@ -7,8 +7,14 @@ const PORT = 8080; // default port 8080
 
 // (Temporary) database containing string created by generateRandomString() as keys, and full URLs as values
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userOne"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "userTwo"
+  }
 };
 
 // (Temporary) user database containing user ID as keys, and objects containing their login information as values
@@ -61,9 +67,20 @@ function checkEmail(obj, email) {
   return null;
 };
 
-// Modular addition to checkEmail() for the login path, using the returned user object to quickly compare passwords rather than having to iterate through the database again
+// Modular addition to checkEmail() for the /login path, using the returned user object to quickly compare passwords rather than having to iterate through the database again
 function checkPassword(user, password) {
   return user.password === password;
+};
+
+// Function takes in a userID and returns an object containing all the short IDs and longURLs with a matching userID value
+function urlsForUser(id) {
+  const userURLs = {};
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      userURLs[url] = urlDatabase[url].longURL;
+    }
+  }
+  return userURLs;
 };
 
 // Likely remove later
@@ -84,16 +101,20 @@ app.get("/hello", (req, res) => {
 
 // GET /urls -- user will be redirected here after logging in, logging out, and EDITING (NOT adding) or deleting a URL
 app.get("/urls", (req, res) => {
-  const user = req.cookies["user_id"];
-  const templateVars = { urls: urlDatabase, user: users[user] };
-  res.render("urls_index", templateVars);
+  if (req.cookies.user_id) {
+    const user = req.cookies.user_id;
+    const templateVars = { user: users[user], urls: urlsForUser(user) };
+    res.render("urls_index", templateVars);
+  } else {
+    return res.status(401).send("Please log in to view URLs");
+  }
 });
 
 // POST /urls -- user has added a new URL to the list, will then be sent to that URL's specific page
 app.post("/urls", (req, res) => {
   if (req.cookies.user_id) {
     const newID = generateRandomString();
-    urlDatabase[newID] = req.body.longURL;
+    urlDatabase[newID] = {longURL: req.body.longURL, userID: req.cookies.user_id}
     res.redirect(`urls/${newID}`);
   } else {
     return res.status(401).send("You must log in to shorten URLs");
@@ -113,38 +134,63 @@ app.get("/urls/new", (req, res) => {
 
 // GET /urls/:id -- user has clicked the edit button in /urls
 app.get("/urls/:id", (req, res) => {
-  if (req.cookies.user_id) {
-    const user = req.cookies["user_id"];
-    const templateVars = {
-      id: req.params.id,
-      longURL: urlDatabase[req.params.id],
-      user: users[user]
-    };
+  if (!req.cookies.user_id) {
+    return res.status(401).send("Please log in to view URLs");
+  }
+
+  const user = req.cookies.user_id;
+  const templateVars = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id].longURL,
+    user: users[user]
+  };
+
+  if (user === urlDatabase[req.params.id].userID) {
     res.render("urls_show", templateVars);
   } else {
-    res.redirect("/login");
+    return res.status(403).send("You aren't authorized to edit this URL");
   }
 });
 
 // POST /urls/:id -- user has entered a new URL into the editField and submitted it. Will be redirected to /urls
 app.post("/urls/:id", (req, res) => {
-  if (req.cookies.user_id) {
-    urlDatabase[req.params.id] = req.body.editField;
-    res.redirect("/urls")
-  } else {
+  if (!urlDatabase[req.params.id]) {
+    return res.status(404).send("The URL you entered does not exist");
+  }
+
+  if (!req.cookies.user_id) {
     return res.status(401).send("You must log in to edit URLs");
+  }
+
+  if (req.cookies.user_id === urlDatabase[req.params.id].userID) {
+    urlDatabase[req.params.id].longURL = req.body.editField;
+    res.redirect("/urls")
+    } else {
+      return res.status(403).send("You aren't authorized to edit this URL");
   }
 });
 
 // POST /urls/:id/delete -- user has clicked the big red delete button in /urls. Will be redirected to /urls
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  if (!urlDatabase[req.params.id]) {
+    return res.status(404).send("The URL you entered does not exist");
+  }
+
+  if (!req.cookies.user_id) {
+    return res.status(401).send("You must log in to edit URLs");
+  }
+
+  if (req.cookies.user_id === urlDatabase[req.params.id].userID) {
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls");
+  } else {
+    return res.status(403).send("You aren't authorized to edit this URL");
+  }
 });
 
 // GET /u/:id -- (CURRENTLY LIMITED IMPLEMENTATION) user has clicked the "Short URL ID" link in urls/show, will be redirected to the corresponding longURL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   if (longURL) {
     res.redirect(longURL);
   } else {
