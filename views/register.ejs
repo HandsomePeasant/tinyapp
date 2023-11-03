@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+    integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous" />
+  <title>Register</title>
+</head>
+
+<body>
+  <header>
+    <nav class="navbar navbar-expand-md navbar-dark bg-success">
+      <a class="navbar-brand" href="/urls">TinyApp</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+        aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </nav>
+  </header>
+  <main style="margin: 1em;">
+    <div>
+      <h2>Register here!</h2>
+
+      <!-- <h3>Already registered? Visit the <a href="/login">login</a> page.</h3> -->
+    </div>
+    <div class="card-footer text-muted">
+      <form method="POST" action="/register">
+        <label>Email</label>
+        <input name="email" type="email">
+        <br />
+        <label>Password</label>
+        <input name="password" type="password">
+        <br />
+        <button type="submit">Register</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>
