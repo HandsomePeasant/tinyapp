@@ -142,7 +142,7 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-// POST /login -- user enters their email address & password and clicks the form button, a cookie is created to store their username
+// POST /login -- user enters their email address & password and clicks the form button, a cookie is created to store their user_id
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -186,7 +186,7 @@ app.post("/register", (req, res) => {
 // POST /logout -- user clicks the logout button, the cookie is cleared
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 app.listen(PORT, () => {
