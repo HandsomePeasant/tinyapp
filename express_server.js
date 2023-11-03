@@ -49,15 +49,21 @@ function storeUserData(id, email, password) {
   return data;
 };
 
-// Small helper function that takes in an object (our user database) and an email address, checks if the email exists already, and returns true if yes, false if no
+// Small helper function that takes in an object (our user database) and an email address, checks if the email exists already,
+// and returns the associated user data if it does, or null if it does not
 function checkEmail(obj, email) {
   for (const userId in obj) {
     const user = obj[userId];
     if (user.email === email) {
-      return true;
+      return user;
     }
   }
-  return false;
+  return null;
+};
+
+// Modular addition to checkEmail() for the login path, using the returned user object to quickly compare passwords rather than having to iterate through the database again
+function checkPassword(user, password) {
+  return user.password === password;
 };
 
 // Likely remove later
@@ -136,9 +142,24 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-// POST /login -- user enters a username and clicks the form button, a cookie is created to store their username
+// POST /login -- user enters their email address & password and clicks the form button, a cookie is created to store their username
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password) {
+    return res.status(400).send("Please provide an email AND password");
+  }
+
+  const user = checkEmail(users, email);
+  if (!user) {
+    return res.status(403).send("Email not found");
+  };
+
+  if (!checkPassword(user, password)) {
+    return res.status(403).send("Invalid credentials");
+  }
+  res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
 
