@@ -91,33 +91,49 @@ app.get("/urls", (req, res) => {
 
 // POST /urls -- user has added a new URL to the list, will then be sent to that URL's specific page
 app.post("/urls", (req, res) => {
-  const newID = generateRandomString();
-  urlDatabase[newID] = req.body.longURL;
-  res.redirect(`urls/${newID}`);
+  if (req.cookies.user_id) {
+    const newID = generateRandomString();
+    urlDatabase[newID] = req.body.longURL;
+    res.redirect(`urls/${newID}`);
+  } else {
+    return res.status(401).send("You must log in to shorten URLs");
+  }
 });
 
 // GET /urls/new -- user has clicked on "Create New URL" in the header navbar
 app.get("/urls/new", (req, res) => {
-  const user = req.cookies["user_id"];
-  const templateVars = { user: users[user] };
-  res.render("urls_new", templateVars);
+  if (req.cookies.user_id) {
+    const user = req.cookies.user_id;
+    const templateVars = { user: users[user] };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 // GET /urls/:id -- user has clicked the edit button in /urls
 app.get("/urls/:id", (req, res) => {
-  const user = req.cookies["user_id"];
-  const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: users[user]
-  };
-  res.render("urls_show", templateVars);
+  if (req.cookies.user_id) {
+    const user = req.cookies["user_id"];
+    const templateVars = {
+      id: req.params.id,
+      longURL: urlDatabase[req.params.id],
+      user: users[user]
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 // POST /urls/:id -- user has entered a new URL into the editField and submitted it. Will be redirected to /urls
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.editField;
-  res.redirect("/urls")
+  if (req.cookies.user_id) {
+    urlDatabase[req.params.id] = req.body.editField;
+    res.redirect("/urls")
+  } else {
+    return res.status(401).send("You must log in to edit URLs");
+  }
 });
 
 // POST /urls/:id/delete -- user has clicked the big red delete button in /urls. Will be redirected to /urls
@@ -129,17 +145,31 @@ app.post("/urls/:id/delete", (req, res) => {
 // GET /u/:id -- (CURRENTLY LIMITED IMPLEMENTATION) user has clicked the "Short URL ID" link in urls/show, will be redirected to the corresponding longURL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  if (longURL) {
+    res.redirect(longURL);
+  } else {
+    return res.status(404).send("URL not found");
+  }
 });
 
 // GET /login -- user has clicked on the Log in button in the header, or the hypertext link in /register
 app.get('/login', (req, res) => {
-  res.render('login');
+  // If a user_id cookie exists, user is already logged in and is redirected to /urls instead
+  if (req.cookies.user_id) {
+    res.redirect("/urls");
+  } else {
+    res.render("login");
+  }
 });
 
-// GET /register -- user directly navigates to /register or is sent there
+// GET /register -- user directly navigates to /register or clicks the link in /login
 app.get("/register", (req, res) => {
-  res.render("register");
+  // If a user_id cookie exists, user is already logged in and is redirected to /urls instead
+  if (req.cookies.user_id) {
+    res.redirect("/urls");
+  } else {
+    res.render("register");
+  }
 });
 
 // POST /login -- user enters their email address & password and clicks the form button, a cookie is created to store their user_id
