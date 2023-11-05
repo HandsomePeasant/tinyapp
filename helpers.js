@@ -23,7 +23,7 @@ function checkEmail(obj, email) {
       return user;
     }
   }
-  return null;
+  return undefined;
 };
 
 /** 
