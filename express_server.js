@@ -1,6 +1,6 @@
 const express = require("express");
 const morgan = require("morgan");
-const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 
 const app = express();
@@ -38,7 +38,10 @@ app.set("view engine", "ejs");
 // Configuring middleware
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['sT8@pR', '5Fy#9q', 'bG2*oL']
+}));
 
 // Function to generate a random six-digit string which will be our shortened URL
 function generateRandomString() {
@@ -102,8 +105,8 @@ app.get("/hello", (req, res) => {
 
 // GET /urls -- user will be redirected here after logging in, logging out, and EDITING (NOT adding) or deleting a URL
 app.get("/urls", (req, res) => {
-  if (req.cookies.user_id) {
-    const user = req.cookies.user_id;
+  if (req.session.user_id) {
+    const user = req.session.user_id;
     const templateVars = { user: users[user], urls: urlsForUser(user) };
     res.render("urls_index", templateVars);
   } else {
@@ -113,9 +116,9 @@ app.get("/urls", (req, res) => {
 
 // POST /urls -- user has added a new URL to the list, will then be sent to that URL's specific page
 app.post("/urls", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     const newID = generateRandomString();
-    urlDatabase[newID] = { longURL: req.body.longURL, userID: req.cookies.user_id }
+    urlDatabase[newID] = { longURL: req.body.longURL, userID: req.session.user_id }
     res.redirect(`urls/${newID}`);
   } else {
     return res.status(401).send("You must log in to shorten URLs");
@@ -124,8 +127,8 @@ app.post("/urls", (req, res) => {
 
 // GET /urls/new -- user has clicked on "Create New URL" in the header navbar
 app.get("/urls/new", (req, res) => {
-  if (req.cookies.user_id) {
-    const user = req.cookies.user_id;
+  if (req.session.user_id) {
+    const user = req.session.user_id;
     const templateVars = { user: users[user] };
     res.render("urls_new", templateVars);
   } else {
@@ -135,11 +138,11 @@ app.get("/urls/new", (req, res) => {
 
 // GET /urls/:id -- user has clicked the edit button in /urls
 app.get("/urls/:id", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.status(401).send("Please log in to view URLs");
   }
 
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id].longURL,
@@ -159,11 +162,11 @@ app.post("/urls/:id", (req, res) => {
     return res.status(404).send("The URL you entered does not exist");
   }
 
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.status(401).send("You must log in to edit URLs");
   }
 
-  if (req.cookies.user_id === urlDatabase[req.params.id].userID) {
+  if (req.session.user_id === urlDatabase[req.params.id].userID) {
     urlDatabase[req.params.id].longURL = req.body.editField;
     res.redirect("/urls")
   } else {
@@ -177,11 +180,11 @@ app.post("/urls/:id/delete", (req, res) => {
     return res.status(404).send("The URL you entered does not exist");
   }
 
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.status(401).send("You must log in to edit URLs");
   }
 
-  if (req.cookies.user_id === urlDatabase[req.params.id].userID) {
+  if (req.session.user_id === urlDatabase[req.params.id].userID) {
     delete urlDatabase[req.params.id];
     res.redirect("/urls");
   } else {
@@ -202,7 +205,7 @@ app.get("/u/:id", (req, res) => {
 // GET /login -- user has clicked on the Log in button in the header, or the hypertext link in /register
 app.get('/login', (req, res) => {
   // If a user_id cookie exists, user is already logged in and is redirected to /urls instead
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     res.redirect("/urls");
   } else {
     res.render("login");
@@ -212,7 +215,7 @@ app.get('/login', (req, res) => {
 // GET /register -- user directly navigates to /register or clicks the link in /login
 app.get("/register", (req, res) => {
   // If a user_id cookie exists, user is already logged in and is redirected to /urls instead
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     res.redirect("/urls");
   } else {
     res.render("register");
@@ -237,7 +240,7 @@ app.post("/login", (req, res) => {
 
   // If the email is found but password is incorrect, returns a 403 error (with a nonspecific error message to avoid revealing whether an email exists in the database)
   if (bcrypt.compareSync(password, user.password)) {
-    res.cookie("user_id", user.id);
+    req.session.user_id = user.id;
     res.redirect("/urls");
   } else {
     return res.status(403).send("Invalid credentials");
@@ -262,13 +265,13 @@ app.post("/register", (req, res) => {
 
   const newID = generateRandomString();
   users[newID] = storeUserData(newID, req.body.email, hashedPassword);
-  res.cookie("user_id", newID);
+  req.session.user_id = newID;
   res.redirect("/urls");
 });
 
 // POST /logout -- user clicks the logout button, the cookie is cleared and they are redirected to /login
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
 });
 
