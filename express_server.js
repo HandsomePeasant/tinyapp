@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require('cookie-parser')
+const bcrypt = require("bcryptjs");
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -235,17 +236,19 @@ app.post("/login", (req, res) => {
   };
 
   // If the email is found but password is incorrect, returns a 403 error (with a nonspecific error message to avoid revealing whether an email exists in the database)
-  if (!checkPassword(user, password)) {
+  if (bcrypt.compareSync(password, user.password)) {
+    res.cookie("user_id", user.id);
+    res.redirect("/urls");
+  } else {
     return res.status(403).send("Invalid credentials");
   }
-  res.cookie("user_id", user.id);
-  res.redirect("/urls");
 });
 
 // POST /register -- performs similar checks to POST /login (but in this case checks if checkEmail() returns a value), generates a new user_id, creates a cookie and redirects to /urls
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   // if user did not fill out one or both fields, returns a 400 error
   if (!email || !password) {
@@ -258,7 +261,7 @@ app.post("/register", (req, res) => {
   }
 
   const newID = generateRandomString();
-  users[newID] = storeUserData(newID, req.body.email, req.body.password);
+  users[newID] = storeUserData(newID, req.body.email, hashedPassword);
   res.cookie("user_id", newID);
   res.redirect("/urls");
 });
