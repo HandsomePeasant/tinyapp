@@ -45,22 +45,6 @@ app.use(cookieSession({
   keys: ['sT8@pR', '5Fy#9q', 'bG2*oL']
 }));
 
-// Likely remove later
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-// Likely remove later
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-// Likely remove later
-app.get("/hello", (req, res) => {
-  const templateVars = { greeting: "Hello World!", id: req.cookies["user_id"] };
-  res.render("hello_world", templateVars)
-});
-
 // GET /urls -- user will be redirected here after logging in, logging out, and EDITING (NOT adding) or deleting a URL
 app.get("/urls", (req, res) => {
   if (req.session.user_id) {
