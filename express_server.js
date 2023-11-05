@@ -2,14 +2,14 @@ const express = require("express");
 const morgan = require("morgan");
 const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
-const methodOverride  = require("method-override");
+const methodOverride = require("method-override");
 
 const { generateRandomString, storeUserData, checkEmail, urlsForUser } = require('./helpers');
 
 const app = express();
 const PORT = 8080; // default port 8080
 
-// (Temporary) database containing string created by generateRandomString() as keys, and full URLs as values
+// Database containing string created by generateRandomString() as keys paired with an object containing the longURL and the userID of whoever added it
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
@@ -21,7 +21,8 @@ const urlDatabase = {
   }
 };
 
-// (Temporary) user database containing user ID as keys, and objects containing their login information as values
+// User database containing user ID as keys, and objects containing their login information as values
+// Users below are simply demonstrative, due to password hash checks they cannot log in
 const users = {
   userOne: {
     id: "userOne",
@@ -100,7 +101,7 @@ app.get("/urls/:id", (req, res) => {
   if (user === urlDatabase[req.params.id].userID) {
     res.render("urls_show", templateVars);
   } else {
-    return res.status(403).render("error", { errMsg: "You aren't authorized to edit this URL", statusCode: 403, user: user});
+    return res.status(403).render("error", { errMsg: "You aren't authorized to edit this URL", statusCode: 403, user: user });
   }
 });
 
@@ -224,5 +225,5 @@ app.post("/logout", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp is listening on port ${PORT}!`);
 });
