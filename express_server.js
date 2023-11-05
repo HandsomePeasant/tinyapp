@@ -114,7 +114,7 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   if (req.cookies.user_id) {
     const newID = generateRandomString();
-    urlDatabase[newID] = {longURL: req.body.longURL, userID: req.cookies.user_id}
+    urlDatabase[newID] = { longURL: req.body.longURL, userID: req.cookies.user_id }
     res.redirect(`urls/${newID}`);
   } else {
     return res.status(401).send("You must log in to shorten URLs");
@@ -165,8 +165,8 @@ app.post("/urls/:id", (req, res) => {
   if (req.cookies.user_id === urlDatabase[req.params.id].userID) {
     urlDatabase[req.params.id].longURL = req.body.editField;
     res.redirect("/urls")
-    } else {
-      return res.status(403).send("You aren't authorized to edit this URL");
+  } else {
+    return res.status(403).send("You aren't authorized to edit this URL");
   }
 });
 
@@ -188,7 +188,7 @@ app.post("/urls/:id/delete", (req, res) => {
   }
 });
 
-// GET /u/:id -- (CURRENTLY LIMITED IMPLEMENTATION) user has clicked the "Short URL ID" link in urls/show, will be redirected to the corresponding longURL
+// GET /u/:id -- user has clicked a "Short URL ID" link, will be redirected to the corresponding longURL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
   if (longURL) {
