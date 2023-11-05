@@ -3,6 +3,8 @@ const morgan = require("morgan");
 const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
 
+const { generateRandomString, storeUserData, checkEmail, urlsForUser } = require('./helpers');
+
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -43,50 +45,6 @@ app.use(cookieSession({
   keys: ['sT8@pR', '5Fy#9q', 'bG2*oL']
 }));
 
-// Function to generate a random six-digit string which will be our shortened URL
-function generateRandomString() {
-  const result = Math.random().toString(36).substr(2, 6);
-  return result;
-};
-
-// Function takes in a randomly-generated string & user-entered email and password, and returns an object that can be inserted into the users database
-function storeUserData(id, email, password) {
-  const data = {
-    id,
-    email,
-    password
-  };
-  return data;
-};
-
-// Small helper function that takes in an object (our user database) and an email address, checks if the email exists already,
-// and returns the associated user data if it does, or null if it does not
-function checkEmail(obj, email) {
-  for (const userId in obj) {
-    const user = obj[userId];
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return null;
-};
-
-// Modular addition to checkEmail() for the /login path, using the returned user object to quickly compare passwords rather than having to iterate through the database again
-function checkPassword(user, password) {
-  return user.password === password;
-};
-
-// Function takes in a userID and returns an object containing all the short IDs and longURLs with a matching userID value
-function urlsForUser(id) {
-  const userURLs = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      userURLs[url] = urlDatabase[url].longURL;
-    }
-  }
-  return userURLs;
-};
-
 // Likely remove later
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -107,7 +65,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   if (req.session.user_id) {
     const user = req.session.user_id;
-    const templateVars = { user: users[user], urls: urlsForUser(user) };
+    const templateVars = { user: users[user], urls: urlsForUser(user, urlDatabase) };
     res.render("urls_index", templateVars);
   } else {
     return res.status(401).send("Please log in to view URLs");
