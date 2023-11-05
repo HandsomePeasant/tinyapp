@@ -54,7 +54,7 @@ app.get("/urls", (req, res) => {
     const templateVars = { user: users[user], urls: urlsForUser(user, urlDatabase) };
     res.render("urls_index", templateVars);
   } else {
-    return res.status(401).send("Please log in to view URLs");
+    return res.status(401).render("error", { errMsg: "Please log in to view URLs", statusCode: 401, user: null });
   }
 });
 
@@ -65,7 +65,7 @@ app.post("/urls", (req, res) => {
     urlDatabase[newID] = { longURL: req.body.longURL, userID: req.session.user_id }
     res.redirect(`urls/${newID}`);
   } else {
-    return res.status(401).send("You must log in to shorten URLs");
+    return res.status(401).render("error", { errMsg: "You must log in to shorten URLs", statusCode: 401, user: null });
   }
 });
 
@@ -83,7 +83,11 @@ app.get("/urls/new", (req, res) => {
 // GET /urls/:id -- user has clicked the edit button in /urls
 app.get("/urls/:id", (req, res) => {
   if (!req.session.user_id) {
-    return res.status(401).send("Please log in to view URLs");
+    return res.status(401).render("error", { errMsg: "Please log in to view URLs", statusCode: 401, user: null });
+  }
+
+  if (!urlDatabase[req.params.id]) {
+    return res.status(404).render("error", { errMsg: "The URL you entered does not exist", statusCode: 404, user: req.session.user_id });
   }
 
   const user = req.session.user_id;
@@ -96,43 +100,43 @@ app.get("/urls/:id", (req, res) => {
   if (user === urlDatabase[req.params.id].userID) {
     res.render("urls_show", templateVars);
   } else {
-    return res.status(403).send("You aren't authorized to edit this URL");
+    return res.status(403).render("error", { errMsg: "You aren't authorized to edit this URL", statusCode: 403, user: user});
   }
 });
 
 // PUT /urls/:id -- user has entered a new URL into the editField and submitted it. Will be redirected to /urls
 app.put("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-    return res.status(404).send("The URL you entered does not exist");
+    return res.status(404).render("error", { errMsg: "The URL you entered does not exist", statusCode: 404, user: req.session.user_id });
   }
 
   if (!req.session.user_id) {
-    return res.status(401).send("You must log in to edit URLs");
+    return res.status(401).render("error", { errMsg: "You must log in to edit URLs", statusCode: 401, user: null });
   }
 
   if (req.session.user_id === urlDatabase[req.params.id].userID) {
     urlDatabase[req.params.id].longURL = req.body.editField;
     res.redirect("/urls")
   } else {
-    return res.status(403).send("You aren't authorized to edit this URL");
+    return res.status(403).render("error", { errMsg: "You aren't authorized to edit this URL", statusCode: 403, user: req.session.user_id });
   }
 });
 
 // DELETE /urls/:id/delete -- user has clicked the big red delete button in /urls. Will be redirected to /urls
 app.delete("/urls/:id/delete", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-    return res.status(404).send("The URL you entered does not exist");
+    return res.status(404).render("error", { errMsg: "The URL you entered does not exist", statusCode: 404, user: req.session.user_id });
   }
 
   if (!req.session.user_id) {
-    return res.status(401).send("You must log in to edit URLs");
+    return res.status(401).render("error", { errMsg: "You must log in to edit URLs", statusCode: 401, user: null });
   }
 
   if (req.session.user_id === urlDatabase[req.params.id].userID) {
     delete urlDatabase[req.params.id];
     res.redirect("/urls");
   } else {
-    return res.status(403).send("You aren't authorized to edit this URL");
+    return res.status(403).render("error", { errMsg: "You aren't authorized to edit this URL", statusCode: 403, user: req.session.user_id });
   }
 });
 
@@ -142,7 +146,7 @@ app.get("/u/:id", (req, res) => {
   if (longURL) {
     res.redirect(longURL);
   } else {
-    return res.status(404).send("URL not found");
+    return res.status(404).render("error", { errMsg: "URL not found", statusCode: 404, user: req.session.user_id });
   }
 });
 
@@ -173,13 +177,13 @@ app.post("/login", (req, res) => {
 
   // if user did not fill out one or both fields, returns a 400 error
   if (!email || !password) {
-    return res.status(400).send("Please provide an email AND password");
+    return res.status(400).render("error", { errMsg: "Please provide an email AND password", statusCode: 400, user: null });
   }
 
   // If the entered email is not in the database, returns a 403 error
   const user = checkEmail(users, email);
   if (!user) {
-    return res.status(403).send("Email not found");
+    return res.status(403).render("error", { errMsg: "Email not found", statusCode: 403, user: null });
   };
 
   // If the email is found but password is incorrect, returns a 403 error (with a nonspecific error message to avoid revealing whether an email exists in the database)
@@ -187,7 +191,7 @@ app.post("/login", (req, res) => {
     req.session.user_id = user.id;
     res.redirect("/urls");
   } else {
-    return res.status(403).send("Invalid credentials");
+    return res.status(403).render("error", { errMsg: "Invalid credentials", statusCode: 403, user: null });
   }
 });
 
@@ -199,12 +203,12 @@ app.post("/register", (req, res) => {
 
   // if user did not fill out one or both fields, returns a 400 error
   if (!email || !password) {
-    return res.status(400).send("Please provide an email AND password");
+    return res.status(400).render("error", { errMsg: "Please provide an email AND password", statusCode: 400, user: null });
   }
 
   // If the entered email is already in the database, returns a 403 error
   if (checkEmail(users, email)) {
-    return res.status(400).send("This email has already been registered!");
+    return res.status(400).render("error", { errMsg: "Email has already been registered", statusCode: 400, user: null });
   }
 
   const newID = generateRandomString();
