@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cookieSession = require('cookie-session');
 const bcrypt = require("bcryptjs");
+const methodOverride  = require("method-override");
 
 const { generateRandomString, storeUserData, checkEmail, urlsForUser } = require('./helpers');
 
@@ -40,6 +41,7 @@ app.set("view engine", "ejs");
 // Configuring middleware
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
+app.use(methodOverride('_method'));
 app.use(cookieSession({
   name: 'session',
   keys: ['sT8@pR', '5Fy#9q', 'bG2*oL']
@@ -98,8 +100,8 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
-// POST /urls/:id -- user has entered a new URL into the editField and submitted it. Will be redirected to /urls
-app.post("/urls/:id", (req, res) => {
+// PUT /urls/:id -- user has entered a new URL into the editField and submitted it. Will be redirected to /urls
+app.put("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send("The URL you entered does not exist");
   }
@@ -116,8 +118,8 @@ app.post("/urls/:id", (req, res) => {
   }
 });
 
-// POST /urls/:id/delete -- user has clicked the big red delete button in /urls. Will be redirected to /urls
-app.post("/urls/:id/delete", (req, res) => {
+// DELETE /urls/:id/delete -- user has clicked the big red delete button in /urls. Will be redirected to /urls
+app.delete("/urls/:id/delete", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send("The URL you entered does not exist");
   }
